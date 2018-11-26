@@ -281,7 +281,7 @@ namespace Coldairarrow.Business
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="keyValue">主键</param>
         /// <returns></returns>
-        public T GetEntity(object keyValue)
+        public T GetEntity(params object[] keyValue)
         {
             return Service.GetEntity<T>(keyValue);
         }
@@ -537,6 +537,24 @@ namespace Coldairarrow.Business
         public static void HandleException(Exception ex)
         {
             BusHelper.HandleException(ex);
+        }
+
+        /// <summary>
+        /// 校验重复的数据字段
+        /// </summary>
+        /// <param name="data">校验的数据</param>
+        /// <param name="properties">校验的属性，Key为字段名，Value为重复后的提示信息</param>
+        public void CheckProperty(T data, Dictionary<string, string> properties)
+        {
+            foreach (var aProperty in properties)
+            {
+                if (!data.GetPropertyValue(aProperty.Key).IsNullOrEmpty())
+                {
+                    int count = GetIQueryable().Where($"Id!=@0&&{aProperty.Key}==@1", data.GetPropertyValue("Id"), data.GetPropertyValue(aProperty.Key)).Count();
+                    if (count > 0)
+                        throw new Exception(aProperty.Value);
+                }
+            }
         }
 
         #endregion

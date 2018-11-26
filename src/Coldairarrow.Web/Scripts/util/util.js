@@ -185,6 +185,25 @@
         return fmt;
     };
 
+    Date.prototype.addDays = function (d) {
+        this.setDate(this.getDate() + d);
+    };
+    Date.prototype.addWeeks = function (w) {
+        this.addDays(w * 7);
+    };
+    Date.prototype.addMonths = function (m) {
+        var d = this.getDate();
+        this.setMonth(this.getMonth() + m);
+        if (this.getDate() < d)
+            this.setDate(0);
+    };
+    Date.prototype.addYears = function (y) {
+        var m = this.getMonth();
+        this.setFullYear(this.getFullYear() + y);
+        if (m < this.getMonth()) {
+            this.setDate(0);
+        }
+    };
 })();
 
 //字符串格式化输入
@@ -396,10 +415,10 @@
 
 //使用文件base64下载文件
 (function () {
-    if (window.downloadFile)
+    if (window.downloadFileBase64)
         return;
 
-    window.downloadFile = function (base64, fileName) {
+    window.downloadFileBase64 = function (base64, fileName) {
         var blob = base64.toBlob();
         var reader = new FileReader();
         reader.readAsDataURL(blob);
@@ -414,4 +433,56 @@
             $(a).remove();
         }
     };
+})();
+
+//使用文件Url下载文件
+(function () {
+    if (window.downloadFile)
+        return;
+
+    window.downloadFile = function (url) {
+        var a = document.createElement('a');
+        a.hidden = true;
+        a.download = '';
+        a.href = url
+        $("body").append(a);  // 修复firefox中无法触发click
+        a.click();
+        $(a).remove();
+    };
+})();
+
+//拓展window的toDateString方法
+(function () {
+    if (window.toDateString)
+        return;
+
+    window.toDateString = function (date, fmt) {
+        if (date) {
+            return date.toDate().format(fmt);
+        } else {
+            return '';
+        }
+    };
+})();
+
+//拓展window的getType方法
+(function () {
+    if (window.getType)
+        return;
+
+    window.getType = function (obj) {
+        var type = typeof (obj);
+        if (type == 'object') {
+            type = Object.prototype.toString.call(obj);
+            if (type == '[object Array]') {
+                return 'array';
+            } else if (type == '[object Object]') {
+                return "object";
+            } else {
+                return 'param is no object type';
+            }
+        } else {
+            return type;
+        }
+    }
 })();

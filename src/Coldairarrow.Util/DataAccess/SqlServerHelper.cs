@@ -64,21 +64,24 @@ namespace Coldairarrow.Util
         /// </summary>
         /// <param name="schemaName">模式（架构）</param>
         /// <returns></returns>
-        public override List<DbTableInfo> GetDbAllTables(string schemaName = "public")
+        public override List<DbTableInfo> GetDbAllTables(string schemaName = null)
         {
+            if (schemaName.IsNullOrEmpty())
+                schemaName = "dbo";
+
             string sql = @"select
-  a.name AS TableName,
-	g.[value] AS Description
+[TableName] = a.name,
+[Description] = g.value
 from
   sys.tables a left join sys.extended_properties g
-  on (a.object_id = g.major_id AND g.minor_id = 0)
+  on (a.object_id = g.major_id AND g.minor_id = 0 AND g.name= 'MS_Description')
 UNION
 select
-  a.name AS TableName,
-	g.[value] AS Description
+[TableName] = a.name,
+[Description] = g.value
 from
   sys.views a left join sys.extended_properties g
-  on (a.object_id = g.major_id AND g.minor_id = 0)";
+  on (a.object_id = g.major_id AND g.minor_id = 0 AND g.name= 'MS_Description')";
             return GetListBySql<DbTableInfo>(sql);
         }
 
@@ -96,7 +99,7 @@ sys.columns.name as [Name],
 sys.types.name as [Type], 
 sys.columns.is_nullable [IsNullable], 
 [IsIdentity]=CONVERT(BIT, (select count(*) from sys.identity_columns where sys.identity_columns.object_id = sys.columns.object_id and sys.columns.column_id = sys.identity_columns.column_id)),
-  (select value from sys.extended_properties where sys.extended_properties.major_id = sys.columns.object_id and sys.extended_properties.minor_id = sys.columns.column_id) as [Description],
+  (select value from sys.extended_properties where sys.extended_properties.major_id = sys.columns.object_id and sys.extended_properties.minor_id = sys.columns.column_id and name='MS_Description') as [Description],
   [IsKey] =CONVERT(bit,(case when sys.columns.name in (select b.column_name
 from information_schema.table_constraints a
 inner join information_schema.constraint_column_usage b
@@ -112,7 +115,7 @@ sys.columns.name as [Name],
 sys.types.name as [Type], 
 sys.columns.is_nullable [IsNullable], 
 [IsIdentity]=CONVERT(BIT, (select count(*) from sys.identity_columns where sys.identity_columns.object_id = sys.columns.object_id and sys.columns.column_id = sys.identity_columns.column_id)),
-  (select value from sys.extended_properties where sys.extended_properties.major_id = sys.columns.object_id and sys.extended_properties.minor_id = sys.columns.column_id) as [Description],
+  (select value from sys.extended_properties where sys.extended_properties.major_id = sys.columns.object_id and sys.extended_properties.minor_id = sys.columns.column_id and name='MS_Description') as [Description],
   [IsKey] =CONVERT(bit,(case when sys.columns.name in (select b.column_name
 from information_schema.table_constraints a
 inner join information_schema.constraint_column_usage b
